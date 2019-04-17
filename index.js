@@ -6,6 +6,7 @@ const request = require('request');
 const cors = require('cors');
 const AdmZip = require('adm-zip');
 const axios = require('axios');
+const S3FS = require('s3fs');
 var rug = require('random-username-generator');
 mongoose.connect('mongodb://localhost:27017/worky', {
     useNewUrlParser: true
@@ -48,7 +49,11 @@ const csv = require('csv-express')
 const leaderHelperClass = new leaderHelper(profileModel, eventModel, leaderModel);
 const express = require("express");
 const app = express();
-
+var upload = require('s3-write-stream')({
+    accessKeyId: 'AKIAJUXCYO2FWUKKWVWQ'
+  , secretAccessKey:'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'
+  , Bucket: 'worky-gharchives/2017-04'
+})
 // configure dotenv
 
 require('dotenv').config();
@@ -58,7 +63,7 @@ app.use(bodyParser.json({
     limit: '50mb'
 }));
 const port = process.env.PORT || 8080;
-app.listen(80, () => {
+app.listen(90, () => {
     console.log(`Server running on port ${port}`);
 });
 app.get("/leaderboard/:id", async (req, res, next) => {
@@ -74,6 +79,15 @@ app.get("/leaderboard/:id", async (req, res, next) => {
     }
 });
 app.post('/start', async (req, res, next) => {
+    const bucketPath='worky-gharchives/2017-04';
+    const s3Options = {
+        region: 'us-east-1',
+      };
+    const  s3fsImpl = new S3FS(bucketPath, {
+        accessKeyId:'AKIAJUXCYO2FWUKKWVWQ',
+        secretAccessKey: '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',
+    });
+
     const DOWNLOAD_DIR = path.join(process.env.HOME || process.env.USERPROFILE, 'downloads/creativemorph/git-archives/2017-03');
     // const archiveUrl = 'https://data.gharchive.org/2017-03-03-0.json.gz';
     // const zippedArchive = await axios.get(archiveUrl);
@@ -93,17 +107,25 @@ app.post('/start', async (req, res, next) => {
         // var file = fs.createWriteStream(file_path);
         // fs.unlinkSync(file_path)
         console.log('Host : ', fileUrl.hostname, 'path name ', fileUrl.pathname, "File name", filename, " -- ", DOWNLOAD_DIR);
-        await request({ url: my_url, encoding: null })
-            .pipe(fs.createWriteStream(file_path))
-            .on('close', function () {
-                console.log('File written!', counter);
-                counter++;
-            })
-            .on('error', function (error) {
-                console.log("Error", error);
-            })
+        //  request({ url: my_url, encoding: null })
+        //     // .pipe(fs.createWriteStream(file_path))
+        //     .pipe( s3fsImpl.createWriteStream(filename,()=>{
+        //         console.log('File Wriiten')
+        //     }))
+        //     .pipe(fs.createWriteStream(file_path))
+        //     .on('close', function () {
+        //         console.log('File written!', counter);
+        //         counter++;
+        //     })
+        //     .on('error', function (error) {
+        //         console.log("Error", error);
+        //     })
         
-        // const response = await axios.get(my_url);
+        const response = await axios.get(my_url);
+        let progress=false;
+        s3fsImpl.writeFile(filename,response.data,null,()=>{
+            console.log('Written');
+        })
         // // console.log('File data', response);
         // file.write(response.data);
         // file.end();
