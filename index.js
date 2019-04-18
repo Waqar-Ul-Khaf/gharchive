@@ -79,8 +79,32 @@ app.get("/leaderboard/:id", async (req, res, next) => {
         res.send(err);
     }
 });
+const innerLoopPromiseBased=async(s3fsImpl,j)=>{
+    const dates=['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'];
+    let count=0;
+    return new Promise(async(res,rej)=>{
+        for (let i = 0; i <= 23; i++) {
+            let my_url = `https://data.gharchive.org/2017-05-${dates[j]}-${i}.json.gz`;
+            let fileUrl = new Url(`https://data.gharchive.org/2017-05-${dates[j]}-${i}.json.gz`);
+            let filenamer = new Url(`https://data.gharchive.org/2017-05-${dates[j]}-${i}.json`);
+            const filename = fileUrl.pathname.split('/').pop();
+            const unZiipedFilename=filenamer.pathname.split('/').pop();
+            console.log("Processiong File ",filename);
+            try{
+                await ghArchiveHandlerRoutine(s3fsImpl,my_url,filename,unZiipedFilename);
+            }catch(e){
+                console.log('Error dancing ',e);
+                throw new Error(e);
+            }
+            count=count+1;
+        }
+        if(count==24){
+            res(true)
+        }
+    })
+}
 app.post('/start', async (req, res, next) => {
-    const bucketPath='worky-gharchives/2017-05';
+    const bucketPath='worky-gharchives/2017-06';
     const  s3fsImpl = new S3FS(bucketPath, {
         accessKeyId:'AKIAJUXCYO2FWUKKWVWQ',
         secretAccessKey: '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',
@@ -88,66 +112,22 @@ app.post('/start', async (req, res, next) => {
     // const DOWNLOAD_DIR = path.join(process.env.HOME || process.env.USERPROFILE, 'downloads/creativemorph/git-archives/2017-03');
     const dates=['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31']
     let counter = 1;
-    for(let j=0;j<=30;j++){
-    for (let i = 0; i <= 23; i++) {
-        let my_url = `https://data.gharchive.org/2017-05-${dates[j]}-${i}.json.gz`;
-        let fileUrl = new Url(`https://data.gharchive.org/2017-05-${dates[j]}-${i}.json.gz`);
-        let filenamer = new Url(`https://data.gharchive.org/2017-05-${dates[j]}-${i}.json`);
-        const filename = fileUrl.pathname.split('/').pop();
-        const unZiipedFilename=filenamer.pathname.split('/').pop();
-        console.log("Processiong File ",filename);
-        try{
-            await ghArchiveHandlerRoutine(s3fsImpl,my_url,filename,unZiipedFilename);
-        }catch(e){
-            console.log('Error dancing ',e);
-            throw new Error(e);
-        }
-        // const file_path = path.join(DOWNLOAD_DIR, filename);
-        // console.log('Host : ', fileUrl.hostname, 'path name ', fileUrl.pathname, "File name", filename, " -- ", DOWNLOAD_DIR);
-        //  request({ url: my_url, encoding: null })
-        //     // .pipe(fs.createWriteStream(file_path))
-        //     .pipe( s3fsImpl.createWriteStream(filename,()=>{
-        //         console.log('File Wriiten')
-        //     }))
-        //     .pipe(fs.createWriteStream(file_path))
-        //     .on('close', function () {
-        //         console.log('File written!', counter);
-        //         counter++;
-        //     })
-        //     .on('error', function (error) {
-        //         console.log("Error", error);
-        //     })
-        
-        // const response = await axios.get(my_url);
-        // let progress=false;
-        //storing to s3
-        // s3fsImpl.writeFile(filename,response.data,null,()=>{
-            // console.log('Written');
-            // progress=true;
-        // })
-        // fs.writeFileSync(`./data/${filename}`,response.data)
-        // const fileContents = fs.createReadStream(`./data/${filename}`);
-        // const writeStream = fs.createWriteStream(`./data/${unZiipedFilename}`);
-        // const unzip = zlib.createGunzip();
-        // fileContents.pipe(unzip).pipe(writeStream).on('finish', (err) => {
-        //   if (err) return reject(err);
-        //   else{
-        //       console.log('File ',unZiipedFilename," written to harddisk!")
-        //       const temp_file=require(`./data/${unZiipedFilename}`);
-        //       db.gharchives.insertMany(temp_file, function(err,result) {
-        //         if (err) {
-        //           console.log('Importing to mongo error',err);
-        //         } else {
-        //           console.log('Imported to mongo');
-        //           fs.unlinkSync(`./data/${filename}`);
-        //           fs.unlinkSync(`./data/${unZiipedFilename}`)
-        //           console.log('Files deleted after inserting to mongo');
-        //         }
-        //      });
-        //   }
-        // })
-        // await sleep(20000);
-    }
+    for(let j=0;j<=29;j++){
+       await innerLoopPromiseBased(s3fsImpl,j)
+    // for (let i = 0; i <= 23; i++) {
+    //     let my_url = `https://data.gharchive.org/2017-06-${dates[j]}-${i}.json.gz`;
+    //     let fileUrl = new Url(`https://data.gharchive.org/2017-06-${dates[j]}-${i}.json.gz`);
+    //     let filenamer = new Url(`https://data.gharchive.org/2017-06-${dates[j]}-${i}.json`);
+    //     const filename = fileUrl.pathname.split('/').pop();
+    //     const unZiipedFilename=filenamer.pathname.split('/').pop();
+    //     console.log("Processiong File ",filename);
+    //     try{
+    //         await ghArchiveHandlerRoutine(s3fsImpl,my_url,filename,unZiipedFilename);
+    //     }catch(e){
+    //         console.log('Error dancing ',e);
+    //         throw new Error(e);
+    //     }
+    // }
 }
 });
 const ghArchiveHandlerRoutine=async(s3fsImpl,url,filename,unzippedfilename)=>{
@@ -180,7 +160,7 @@ const ghArchiveHandlerRoutine=async(s3fsImpl,url,filename,unzippedfilename)=>{
                           fs.unlinkSync(`./data/${unzippedfilename}`)
                           console.log('Files deleted after inserting to mongo');
                           console.log('Routine ended for file ',filename)
-                          resolve('Done for ',filename);
+                          resolve(true);
                         }
                      });
                   }
