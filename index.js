@@ -11,7 +11,7 @@ var rug = require('random-username-generator');
 mongoose.connect('mongodb://localhost:27017/worky', {
     useNewUrlParser: true
 });
-var db=mongoose.connect;
+var db = mongoose.connect;
 const Url = require('url-parse');
 const StreamArray = require('stream-json/streamers/StreamArray');
 const jsonStream = StreamArray.withParser();
@@ -52,8 +52,8 @@ const express = require("express");
 const app = express();
 var upload = require('s3-write-stream')({
     accessKeyId: 'AKIAJUXCYO2FWUKKWVWQ'
-  , secretAccessKey:'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'
-  , Bucket: 'worky-gharchives/2017-04'
+    , secretAccessKey: '2MQoYFWShQxHKncv4ZoHLeEB/5soZu47goYrPwux'
+    , Bucket: 'worky-gharchives/2017-04'
 })
 // configure dotenv
 
@@ -79,91 +79,78 @@ app.get("/leaderboard/:id", async (req, res, next) => {
         res.send(err);
     }
 });
-const innerLoopPromiseBased=async(s3fsImpl,j)=>{
-    const dates=['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'];
-    let count=0;
-    return new Promise(async(res,rej)=>{
+const innerLoopPromiseBased = async (s3fsImpl, j) => {
+    const dates = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'];
+    let count = 0;
+    return new Promise(async (res, rej) => {
         for (let i = 0; i <= 23; i++) {
-            let my_url = `https://data.gharchive.org/2017-05-${dates[j]}-${i}.json.gz`;
-            let fileUrl = new Url(`https://data.gharchive.org/2017-05-${dates[j]}-${i}.json.gz`);
-            let filenamer = new Url(`https://data.gharchive.org/2017-05-${dates[j]}-${i}.json`);
+            let my_url = `https://data.gharchive.org/2017-06-${dates[j]}-${i}.json.gz`;
+            let fileUrl = new Url(`https://data.gharchive.org/2017-06-${dates[j]}-${i}.json.gz`);
+            let filenamer = new Url(`https://data.gharchive.org/2017-06-${dates[j]}-${i}.json`);
             const filename = fileUrl.pathname.split('/').pop();
-            const unZiipedFilename=filenamer.pathname.split('/').pop();
-            console.log("Processiong File ",filename);
-            try{
-                await ghArchiveHandlerRoutine(s3fsImpl,my_url,filename,unZiipedFilename);
-            }catch(e){
-                console.log('Error dancing ',e);
+            const unZiipedFilename = filenamer.pathname.split('/').pop();
+            console.log("Processiong File ", filename);
+            try {
+                await ghArchiveHandlerRoutine(s3fsImpl, my_url, filename, unZiipedFilename);
+            } catch (e) {
+                console.log('Error dancing ', e);
                 throw new Error(e);
             }
-            count=count+1;
+            count = count + 1;
         }
-        if(count==24){
+        if (count == 24) {
             res(true)
         }
     })
 }
 app.post('/start', async (req, res, next) => {
-    const bucketPath='worky-gharchives/2017-06';
-    const  s3fsImpl = new S3FS(bucketPath, {
-        accessKeyId:'AKIAJUXCYO2FWUKKWVWQ',
+    const bucketPath = 'worky-gharchives/2017-06';
+    const s3fsImpl = new S3FS(bucketPath, {
+        accessKeyId: 'AKIAJUXCYO2FWUKKWVWQ',
         secretAccessKey: '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',
     });
     // const DOWNLOAD_DIR = path.join(process.env.HOME || process.env.USERPROFILE, 'downloads/creativemorph/git-archives/2017-03');
-    const dates=['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31']
+    const dates = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31']
     let counter = 1;
-    for(let j=0;j<=29;j++){
-       await innerLoopPromiseBased(s3fsImpl,j)
-    // for (let i = 0; i <= 23; i++) {
-    //     let my_url = `https://data.gharchive.org/2017-06-${dates[j]}-${i}.json.gz`;
-    //     let fileUrl = new Url(`https://data.gharchive.org/2017-06-${dates[j]}-${i}.json.gz`);
-    //     let filenamer = new Url(`https://data.gharchive.org/2017-06-${dates[j]}-${i}.json`);
-    //     const filename = fileUrl.pathname.split('/').pop();
-    //     const unZiipedFilename=filenamer.pathname.split('/').pop();
-    //     console.log("Processiong File ",filename);
-    //     try{
-    //         await ghArchiveHandlerRoutine(s3fsImpl,my_url,filename,unZiipedFilename);
-    //     }catch(e){
-    //         console.log('Error dancing ',e);
-    //         throw new Error(e);
-    //     }
-    // }
-}
+    for (let j = 0; j <= 29; j++) {
+        await innerLoopPromiseBased(s3fsImpl, j)
+
+    }
 });
-const ghArchiveHandlerRoutine=async(s3fsImpl,url,filename,unzippedfilename)=>{
+const ghArchiveHandlerRoutine = async (s3fsImpl, url, filename, unzippedfilename) => {
     console.log('Events Handling Routine started');
-    let progress=false;
-    return new Promise(async(resolve,reject)=>{
-        const stream=await request({ url, encoding: null })
+    let progress = false;
+    return new Promise(async (resolve, reject) => {
+        const stream = await request({ url, encoding: null })
         stream.pipe(s3fsImpl.createWriteStream(filename))
-            stream.pipe(fs.createWriteStream(`./data/${filename}`))
+        stream.pipe(fs.createWriteStream(`./data/${filename}`))
             .on('close', function () {
-                console.log('zipped File ',filename,' written to disk!');
+                console.log('zipped File ', filename, ' written to disk!');
                 const fileContents = fs.createReadStream(`./data/${filename}`);
                 const writeStream = fs.createWriteStream(`./data/${unzippedfilename}`);
                 const unzip = zlib.createGunzip();
-                fileContents.pipe(unzip).pipe(writeStream).on('finish', async(err) => {
-                  if (err){
-                      console.log('Error in pipe line',err)
-                    return reject(err)
-                  } 
-                  else{
-                        console.log(' unzipped File ',unzippedfilename," written to disk!")
-                        const events=await JsonFileToObjectArrayConverter(`./data/${unzippedfilename}`);
-                        mongoose.connection.db.collection('gharchives').insertMany(events, function(err,result) {
-                        if (err) {
-                          console.log('Importing to mongo error',err);
-                          reject(err);
-                        } else {
-                          console.log(`File ${filename} Imported to mongo`);
-                          fs.unlinkSync(`./data/${filename}`);
-                          fs.unlinkSync(`./data/${unzippedfilename}`)
-                          console.log('Files deleted after inserting to mongo');
-                          console.log('Routine ended for file ',filename)
-                          resolve(true);
-                        }
-                     });
-                  }
+                fileContents.pipe(unzip).pipe(writeStream).on('finish', async (err) => {
+                    if (err) {
+                        console.log('Error in pipe line', err)
+                        return reject(err)
+                    }
+                    else {
+                        console.log(' unzipped File ', unzippedfilename, " written to disk!")
+                        const events = await JsonFileToObjectArrayConverter(`./data/${unzippedfilename}`);
+                        mongoose.connection.db.collection('gharchives').insertMany(events, function (err, result) {
+                            if (err) {
+                                console.log('Importing to mongo error', err);
+                                reject(err);
+                            } else {
+                                console.log(`File ${filename} Imported to mongo`);
+                                fs.unlinkSync(`./data/${filename}`);
+                                fs.unlinkSync(`./data/${unzippedfilename}`)
+                                console.log('Files deleted after inserting to mongo');
+                                console.log('Routine ended for file ', filename)
+                                resolve(true);
+                            }
+                        });
+                    }
                 })
 
             })
@@ -181,34 +168,34 @@ const ghArchiveHandlerRoutine=async(s3fsImpl,url,filename,unzippedfilename)=>{
         // 
     })
 }
-const wait=async (counter)=>{
-    if(counter==24){
+const wait = async (counter) => {
+    if (counter == 24) {
         return Promise.resolve('Done');
     }
 }
-const JsonFileToObjectArrayConverter=async(filepath)=>{
+const JsonFileToObjectArrayConverter = async (filepath) => {
     console.log('Converter called!');
-    return new Promise((res,rej)=>{
-        const results=[];
+    return new Promise((res, rej) => {
+        const results = [];
         const lineReader = require('readline').createInterface({
             input: require('fs').createReadStream(filepath)
-          });
-          lineReader.on('line', function (line) {
+        });
+        lineReader.on('line', function (line) {
             results.push(JSON.parse(line));
-          });
-          lineReader.on('close',()=>{
-              console.log('Resolving Now with length of results',results.length)
-             return  res(results)
-          })
-          lineReader.on('error',(err)=>{
-              console.log('Error ',err);
+        });
+        lineReader.on('close', () => {
+            console.log('Resolving Now with length of results', results.length)
+            return res(results)
+        })
+        lineReader.on('error', (err) => {
+            console.log('Error ', err);
             return rej(err);
-          })
+        })
     });
 }
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
-  }
+}
 app.post("/training", async (req, res, next) => {
     const githelper = new githubHelper(null, "BASIC", null);
     let users = await githubUserController.getAllGithubUsers();
