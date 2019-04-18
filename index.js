@@ -11,6 +11,7 @@ var rug = require('random-username-generator');
 mongoose.connect('mongodb://localhost:27017/worky', {
     useNewUrlParser: true
 });
+var db=mongoose.connect;
 const Url = require('url-parse');
 const StreamArray = require('stream-json/streamers/StreamArray');
 const jsonStream = StreamArray.withParser();
@@ -79,34 +80,30 @@ app.get("/leaderboard/:id", async (req, res, next) => {
     }
 });
 app.post('/start', async (req, res, next) => {
-    const bucketPath='worky-gharchives/2017-04';
-    const s3Options = {
-        region: 'us-east-1',
-      };
+    const bucketPath='worky-gharchives/2017-05';
     const  s3fsImpl = new S3FS(bucketPath, {
         accessKeyId:'AKIAJUXCYO2FWUKKWVWQ',
         secretAccessKey: '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',
     });
-
-    const DOWNLOAD_DIR = path.join(process.env.HOME || process.env.USERPROFILE, 'downloads/creativemorph/git-archives/2017-03');
-    // const archiveUrl = 'https://data.gharchive.org/2017-03-03-0.json.gz';
-    // const zippedArchive = await axios.get(archiveUrl);
-    // const time = 0;
+    // const DOWNLOAD_DIR = path.join(process.env.HOME || process.env.USERPROFILE, 'downloads/creativemorph/git-archives/2017-03');
     const dates=['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31']
     let counter = 1;
-    for(let j=13;j<=30;j++){
+    for(let j=0;j<=30;j++){
     for (let i = 0; i <= 23; i++) {
-        let my_url = `https://data.gharchive.org/2017-03-${dates[j]}-${i}.json.gz`;
-        let fileUrl = new Url(`https://data.gharchive.org/2017-03-${dates[j]}-${i}.json.gz`);
-        var options = {
-            host: fileUrl.host,
-            path: fileUrl.pathname
-        };
+        let my_url = `https://data.gharchive.org/2017-05-${dates[j]}-${i}.json.gz`;
+        let fileUrl = new Url(`https://data.gharchive.org/2017-05-${dates[j]}-${i}.json.gz`);
+        let filenamer = new Url(`https://data.gharchive.org/2017-05-${dates[j]}-${i}.json`);
         const filename = fileUrl.pathname.split('/').pop();
-        const file_path = path.join(DOWNLOAD_DIR, filename);
-        // var file = fs.createWriteStream(file_path);
-        // fs.unlinkSync(file_path)
-        console.log('Host : ', fileUrl.hostname, 'path name ', fileUrl.pathname, "File name", filename, " -- ", DOWNLOAD_DIR);
+        const unZiipedFilename=filenamer.pathname.split('/').pop();
+        console.log("Processiong File ",filename);
+        try{
+            await ghArchiveHandlerRoutine(s3fsImpl,my_url,filename,unZiipedFilename);
+        }catch(e){
+            console.log('Error dancing ',e);
+            throw new Error(e);
+        }
+        // const file_path = path.join(DOWNLOAD_DIR, filename);
+        // console.log('Host : ', fileUrl.hostname, 'path name ', fileUrl.pathname, "File name", filename, " -- ", DOWNLOAD_DIR);
         //  request({ url: my_url, encoding: null })
         //     // .pipe(fs.createWriteStream(file_path))
         //     .pipe( s3fsImpl.createWriteStream(filename,()=>{
@@ -121,93 +118,113 @@ app.post('/start', async (req, res, next) => {
         //         console.log("Error", error);
         //     })
         
-        const response = await axios.get(my_url);
-        let progress=false;
-        s3fsImpl.writeFile(filename,response.data,null,()=>{
-            console.log('Written');
-        })
-        // // console.log('File data', response);
-        // file.write(response.data);
-        // file.end();
-        // await http.get(options, function (resp) {
-        //     resp.on('data', function (data) {
-        //         file.write(data);
-        //     }).on('end', function () {
-        //         file.end();
-        //         console.log(filename + ' downloaded to ' + DOWNLOAD_DIR);
-        //         delete (fileUrl)
-        //     });
-        // });
-        await sleep(20000);
+        // const response = await axios.get(my_url);
+        // let progress=false;
+        //storing to s3
+        // s3fsImpl.writeFile(filename,response.data,null,()=>{
+            // console.log('Written');
+            // progress=true;
+        // })
+        // fs.writeFileSync(`./data/${filename}`,response.data)
+        // const fileContents = fs.createReadStream(`./data/${filename}`);
+        // const writeStream = fs.createWriteStream(`./data/${unZiipedFilename}`);
+        // const unzip = zlib.createGunzip();
+        // fileContents.pipe(unzip).pipe(writeStream).on('finish', (err) => {
+        //   if (err) return reject(err);
+        //   else{
+        //       console.log('File ',unZiipedFilename," written to harddisk!")
+        //       const temp_file=require(`./data/${unZiipedFilename}`);
+        //       db.gharchives.insertMany(temp_file, function(err,result) {
+        //         if (err) {
+        //           console.log('Importing to mongo error',err);
+        //         } else {
+        //           console.log('Imported to mongo');
+        //           fs.unlinkSync(`./data/${filename}`);
+        //           fs.unlinkSync(`./data/${unZiipedFilename}`)
+        //           console.log('Files deleted after inserting to mongo');
+        //         }
+        //      });
+        //   }
+        // })
+        // await sleep(20000);
     }
 }
-    // fs.createReadStream('2015-01-01-0.json.gz').pipe(verifier)
-    // console.log("Zipped Archive", zippedArchive);
-    // const admZippedArchive = new AdmZip(zippedArchive);
-    // const zipEntries = admZippedArchive.getEntries();
-    // console.log("Zip Entries   ----->", zipEntries);
-    // zipEntries.foreach((zipEntry) => {
-    //     console.log(zipEntry.toString());
-    // })
-    // zipEntries.map(zip => {
-    //     console.log('Zip is here ---->', zip)
-    // })
-    // const unzppedArchive = await ungzip(zippedArchive);
-
-    // console.log('this is the result of hit', unzppedArchive.toString());
-    // zlib.gunzip(zippedArchive, function (error, buff) {
-    //     if (error != null) {
-    //         console.log('Error While unzipping is ', error);
-    //     }
-    //     else {
-    //         buff.toString('utf-8');
-    //     }
-    // });
-    // call me for getting data and unzip 
-    // getGzipped(archiveUrl, function (err, data) {
-    //     if (err) {
-    //         // console.log('Failed uncompressing ', err);
-    //     }
-    //     if (data) {
-    //         for (let key in data) {
-    //             console.log('---------->', data);
-    //         }
-    //     }
-    // // });
-    // const pipeline = chain([
-    //     fs.createReadStream('2015-01-01-0.json.gz'),
-    //     zlib.createGunzip(),
-    //     parser(),
-    //     // pick({ filter: 'type' }),
-    //     // ignore({ filter: 'payload' }),
-    //     streamValues(),
-    //     data => {
-    //         console.log("data ----------->", data);
-    //         const value = data.value;
-    //         // return value && value.department === 'accounting' ? data : null;
-    //         return value;
-    //     }
-    // ]);
-    // pipeline.on('data', (data) => {
-    //     console.log('data ===>', data);
-    // });
-    // pipeline.on('end', () => console.log("Ended"))
-    // verifier.on('error', error => console.log(error));
-
-    // fs.createReadStream('2015-01-01-0.json.gz').pipe(verifier);
-    // jsonStream.on('data', ({ key, value }) => {
-    //     console.log(key, value);
-    // });
-
-    // jsonStream.on('end', () => {
-    //     console.log('All done');
-    // });
-    // fs.createReadStream("2015-01-01-0.json.gz").pipe(jsonStream.input);
 });
+const ghArchiveHandlerRoutine=async(s3fsImpl,url,filename,unzippedfilename)=>{
+    console.log('Events Handling Routine started');
+    let progress=false;
+    return new Promise(async(resolve,reject)=>{
+        const stream=await request({ url, encoding: null })
+        stream.pipe(s3fsImpl.createWriteStream(filename))
+            stream.pipe(fs.createWriteStream(`./data/${filename}`))
+            .on('close', function () {
+                console.log('zipped File ',filename,' written to disk!');
+                const fileContents = fs.createReadStream(`./data/${filename}`);
+                const writeStream = fs.createWriteStream(`./data/${unzippedfilename}`);
+                const unzip = zlib.createGunzip();
+                fileContents.pipe(unzip).pipe(writeStream).on('finish', async(err) => {
+                  if (err){
+                      console.log('Error in pipe line',err)
+                    return reject(err)
+                  } 
+                  else{
+                        console.log(' unzipped File ',unzippedfilename," written to disk!")
+                        const events=await JsonFileToObjectArrayConverter(`./data/${unzippedfilename}`);
+                        mongoose.connection.db.collection('gharchives').insertMany(events, function(err,result) {
+                        if (err) {
+                          console.log('Importing to mongo error',err);
+                          reject(err);
+                        } else {
+                          console.log(`File ${filename} Imported to mongo`);
+                          fs.unlinkSync(`./data/${filename}`);
+                          fs.unlinkSync(`./data/${unzippedfilename}`)
+                          console.log('Files deleted after inserting to mongo');
+                          console.log('Routine ended for file ',filename)
+                          resolve('Done for ',filename);
+                        }
+                     });
+                  }
+                })
+
+            })
+            .on('error', function (error) {
+                console.log("Error", error);
+            })
+        // const response = await axios.get(url,);
+        //storing to s3
+        // s3fsImpl.writeFile(filename,response.data,null,()=>{
+        //     console.log('Stored on s3');
+        //     progress=true;
+        // })
+        // fs.writeFileSync(`./data/${filename}`,response.data)
+        // console.log('File Written to disk');
+        // 
+    })
+}
 const wait=async (counter)=>{
     if(counter==24){
         return Promise.resolve('Done');
     }
+}
+const JsonFileToObjectArrayConverter=async(filepath)=>{
+    console.log('Converter called!');
+    return new Promise((res,rej)=>{
+        const results=[];
+        const lineReader = require('readline').createInterface({
+            input: require('fs').createReadStream(filepath)
+          });
+          lineReader.on('line', function (line) {
+            results.push(JSON.parse(line));
+          });
+          lineReader.on('close',()=>{
+              console.log('Resolving Now with length of results',results.length)
+             return  res(results)
+          })
+          lineReader.on('error',(err)=>{
+              console.log('Error ',err);
+            return rej(err);
+          })
+    });
 }
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
