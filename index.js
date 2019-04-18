@@ -64,8 +64,8 @@ app.use(bodyParser.json({
     limit: '50mb'
 }));
 const port = process.env.PORT || 8080;
-app.listen(90, () => {
-    console.log(`Server running on port ${port}`);
+app.listen(80, () => {
+    console.log(`Server running on port 80`);
 });
 app.get("/leaderboard/:id", async (req, res, next) => {
     console.log("**** /leaderboard ****", req.params);
