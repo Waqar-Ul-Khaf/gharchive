@@ -55,10 +55,7 @@ var upload = require('s3-write-stream')({
     , secretAccessKey: '2MQoYFWShQxHKncv4ZoHLeEB/5soZu47goYrPwux'
     , Bucket: 'worky-gharchives/2017-04'
 })
-// configure dotenv
-
 require('dotenv').config();
-
 app.use(cors());
 app.use(bodyParser.json({
     limit: '50mb'
@@ -84,9 +81,9 @@ const innerLoopPromiseBased = async (s3fsImpl, j) => {
     let count = 0;
     return new Promise(async (res, rej) => {
         for (let i = 0; i <= 23; i++) {
-            let my_url = `https://data.gharchive.org/2017-09-${dates[j]}-${i}.json.gz`;
-            let fileUrl = new Url(`https://data.gharchive.org/2017-09-${dates[j]}-${i}.json.gz`);
-            let filenamer = new Url(`https://data.gharchive.org/2017-09-${dates[j]}-${i}.json`);
+            let my_url = `https://data.gharchive.org/2017-10-${dates[j]}-${i}.json.gz`;
+            let fileUrl = new Url(`https://data.gharchive.org/2017-10-${dates[j]}-${i}.json.gz`);
+            let filenamer = new Url(`https://data.gharchive.org/2017-10-${dates[j]}-${i}.json`);
             const filename = fileUrl.pathname.split('/').pop();
             const unZiipedFilename = filenamer.pathname.split('/').pop();
             console.log("Processiong File ", filename);
@@ -104,22 +101,17 @@ const innerLoopPromiseBased = async (s3fsImpl, j) => {
     })
 }
 app.post('/start', async (req, res, next) => {
-    const bucketPath = 'worky-gharchives/2017-09';
+    const bucketPath = 'worky-gharchives/2017-10';
     const s3fsImpl = new S3FS(bucketPath, {
         accessKeyId: 'AKIAJUXCYO2FWUKKWVWQ',
         secretAccessKey: '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',
     });
-    // const DOWNLOAD_DIR = path.join(process.env.HOME || process.env.USERPROFILE, 'downloads/creativemorph/git-archives/2017-03');
-    const dates = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31']
-    let counter = 1;
-    for (let j = 0; j <= 29; j++) {
+    for (let j = 0; j <= 30; j++) {
         await innerLoopPromiseBased(s3fsImpl, j)
-
     }
 });
 const ghArchiveHandlerRoutine = async (s3fsImpl, url, filename, unzippedfilename) => {
     console.log('Events Handling Routine started');
-    let progress = false;
     return new Promise(async (resolve, reject) => {
         const stream = await request({ url, encoding: null })
         stream.pipe(s3fsImpl.createWriteStream(filename))
@@ -157,15 +149,6 @@ const ghArchiveHandlerRoutine = async (s3fsImpl, url, filename, unzippedfilename
             .on('error', function (error) {
                 console.log("Error", error);
             })
-        // const response = await axios.get(url,);
-        //storing to s3
-        // s3fsImpl.writeFile(filename,response.data,null,()=>{
-        //     console.log('Stored on s3');
-        //     progress=true;
-        // })
-        // fs.writeFileSync(`./data/${filename}`,response.data)
-        // console.log('File Written to disk');
-        // 
     })
 }
 const wait = async (counter) => {
