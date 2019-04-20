@@ -81,9 +81,9 @@ const innerLoopPromiseBased = async (s3fsImpl, j) => {
     let count = 0;
     return new Promise(async (res, rej) => {
         for (let i = 0; i <= 23; i++) {
-            let my_url = `https://data.gharchive.org/2017-12-${dates[j]}-${i}.json.gz`;
-            let fileUrl = new Url(`https://data.gharchive.org/2017-12-${dates[j]}-${i}.json.gz`);
-            let filenamer = new Url(`https://data.gharchive.org/2017-12-${dates[j]}-${i}.json`);
+            let my_url = `https://data.gharchive.org/2017-01-${dates[j]}-${i}.json.gz`;
+            let fileUrl = new Url(`https://data.gharchive.org/2017-01-${dates[j]}-${i}.json.gz`);
+            let filenamer = new Url(`https://data.gharchive.org/2017-01-${dates[j]}-${i}.json`);
             const filename = fileUrl.pathname.split('/').pop();
             const unZiipedFilename = filenamer.pathname.split('/').pop();
             console.log("Processiong File ", filename);
@@ -101,7 +101,7 @@ const innerLoopPromiseBased = async (s3fsImpl, j) => {
     })
 }
 app.post('/start', async (req, res, next) => {
-    const bucketPath = 'worky-gharchives/2017-12';
+    const bucketPath = 'worky-gharchives/2017-01';
     const s3fsImpl = new S3FS(bucketPath, {
         accessKeyId: 'AKIAJUXCYO2FWUKKWVWQ',
         secretAccessKey: '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',
