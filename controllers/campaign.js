@@ -26,7 +26,7 @@ class campaign {
         let allCampaigns = [];
         allCampaigns = await this.model.find({ createdBy: id });
         console.log('All campaigns', allCampaigns);
-        return allCampaigns
+        return allCampaigns 
     }
 }
 module.exports = campaign;
