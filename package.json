@@ -3,7 +3,7 @@
     "@octokit/plugin-throttling": "^2.4.0",
     "@octokit/rest": "^16.16.4",
     "adm-zip": "^0.4.13",
-    "axios": "^0.18.0",
+    "axios": "^0.21.1",
     "body-parser": "^1.18.3",
     "cors": "^2.8.5",
     "csv-express": "^1.2.2",
