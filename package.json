@@ -13,7 +13,7 @@
     "mongoose": "^5.4.17",
     "node-cron": "^2.0.3",
     "node-gzip": "^1.1.2",
-    "nodemailer": "^6.0.0",
+    "nodemailer": "^6.4.16",
     "random-username-generator": "^1.0.4",
     "request": "^2.88.0",
     "s3-write-stream": "0.0.1",
