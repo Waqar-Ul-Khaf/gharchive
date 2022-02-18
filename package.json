@@ -19,7 +19,7 @@
     "s3-write-stream": "0.0.1",
     "s3fs": "^2.5.0",
     "stream-json": "^1.2.1",
-    "url-parse": "^1.4.6",
+    "url-parse": "^1.5.6",
     "uuid": "^3.3.2",
     "zlib": "^1.0.5"
   },
